@@ -6,23 +6,19 @@ import { Button } from '../../../components/ui/Button';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { useToast } from '../../../components/ui/Toast';
 import {
-  ArrowLeft, Save, Users, Mail, Calendar, Clock, Video, MapPin, Phone,
+  ArrowLeft, Save, Users, Calendar, Clock, Video, MapPin, Phone,
   Briefcase, Building2,
 } from 'lucide-react';
 import type { InterviewRequest, InterviewMode, InterviewRound } from '../../../types';
 
 function FormSection({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-slate-200">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200">
-        <div className="flex h-6 w-6 items-center justify-center bg-indigo-100 text-indigo-600">
-          {icon}
-        </div>
-        <h3 className="text-xs font-semibold text-slate-800 uppercase tracking-wider">{title}</h3>
+    <div className="bg-white rounded-lg border border-slate-200 shadow-[0_1px_2px_0_rgb(0_0_0_/_0.03)] p-5">
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-50 text-blue-600">{icon}</div>
+        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
       </div>
-      <div className="p-4 space-y-3">
-        {children}
-      </div>
+      {children}
     </div>
   );
 }
@@ -86,35 +82,29 @@ export default function AdminInterviewForm() {
   };
 
   if (isEdit && loadingInterview) {
-    return <div className="max-w-2xl mx-auto space-y-4"><Skeleton className="h-64 border border-slate-200" /></div>;
+    return <div className="max-w-2xl mx-auto space-y-6"><Skeleton className="h-64 rounded-lg" /></div>;
   }
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/admin/interviews')} className="flex h-7 w-7 items-center justify-center border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-colors">
-            <ArrowLeft className="h-3.5 w-3.5" />
-          </button>
-          <div>
-            <h1 className="text-lg font-bold text-slate-900 tracking-tight">{isEdit ? 'Edit Interview' : 'Schedule Interview'}</h1>
-            <p className="text-xs text-slate-500 mt-0.5">{isEdit ? 'Update interview details' : 'Schedule a new interview for a candidate'}</p>
-          </div>
+      <div className="flex items-center gap-4 mb-5">
+        <button onClick={() => navigate('/admin/interviews')} className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-all">
+          <ArrowLeft className="h-3.5 w-3.5" />
+        </button>
+        <div>
+          <h1 className="text-lg font-semibold text-slate-900">{isEdit ? 'Edit Interview' : 'Schedule Interview'}</h1>
+          <p className="text-sm text-slate-500 mt-0.5">{isEdit ? 'Update interview details' : 'Schedule a new interview for a candidate'}</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-5">
           {!isEdit && (
-            <FormSection title="Candidate Application" icon={<Briefcase className="h-3.5 w-3.5" />}>
+            <FormSection title="Candidate Application" icon={<Briefcase className="h-4 w-4" />}>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">Application <span className="text-red-500">*</span></label>
-                <select
-                  value={form.applicationId}
-                  onChange={(e) => setForm(f => ({ ...f, applicationId: Number(e.target.value) }))}
-                  className="w-full border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 appearance-none"
-                  required
-                >
+                <select value={form.applicationId} onChange={(e) => setForm(f => ({ ...f, applicationId: Number(e.target.value) }))}
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400" required>
                   <option value={0}>Select application...</option>
                   {appsPage?.content?.map(a => (
                     <option key={a.id} value={a.id}>{a.candidateName} - {a.jobTitle}</option>
@@ -124,76 +114,47 @@ export default function AdminInterviewForm() {
             </FormSection>
           )}
 
-          <FormSection title="Interviewer Details" icon={<Users className="h-3.5 w-3.5" />}>
+          <FormSection title="Interviewer Details" icon={<Users className="h-4 w-4" />}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700">Interviewer Name <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={form.interviewerName}
-                  onChange={(e) => setForm(f => ({ ...f, interviewerName: e.target.value }))}
-                  className="w-full border border-slate-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
-                  required
-                />
+                <label className="text-sm font-medium text-slate-700">Name <span className="text-red-500">*</span></label>
+                <input type="text" value={form.interviewerName} onChange={(e) => setForm(f => ({ ...f, interviewerName: e.target.value }))}
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400" required />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700">Interviewer Email <span className="text-red-500">*</span></label>
-                <input
-                  type="email"
-                  value={form.interviewerEmail}
-                  onChange={(e) => setForm(f => ({ ...f, interviewerEmail: e.target.value }))}
-                  className="w-full border border-slate-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
-                  required
-                />
+                <label className="text-sm font-medium text-slate-700">Email <span className="text-red-500">*</span></label>
+                <input type="email" value={form.interviewerEmail} onChange={(e) => setForm(f => ({ ...f, interviewerEmail: e.target.value }))}
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400" required />
               </div>
             </div>
           </FormSection>
 
-          <FormSection title="Schedule" icon={<Calendar className="h-3.5 w-3.5" />}>
+          <FormSection title="Schedule" icon={<Calendar className="h-4 w-4" />}>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">Date <span className="text-red-500">*</span></label>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm(f => ({ ...f, date: e.target.value }))}
-                  className="w-full border border-slate-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
-                  required
-                />
+                <input type="date" value={form.date} onChange={(e) => setForm(f => ({ ...f, date: e.target.value }))}
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400" required />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">Start Time <span className="text-red-500">*</span></label>
-                <input
-                  type="time"
-                  value={form.startTime}
-                  onChange={(e) => setForm(f => ({ ...f, startTime: e.target.value }))}
-                  className="w-full border border-slate-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
-                  required
-                />
+                <input type="time" value={form.startTime} onChange={(e) => setForm(f => ({ ...f, startTime: e.target.value }))}
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400" required />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">End Time <span className="text-red-500">*</span></label>
-                <input
-                  type="time"
-                  value={form.endTime}
-                  onChange={(e) => setForm(f => ({ ...f, endTime: e.target.value }))}
-                  className="w-full border border-slate-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
-                  required
-                />
+                <input type="time" value={form.endTime} onChange={(e) => setForm(f => ({ ...f, endTime: e.target.value }))}
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400" required />
               </div>
             </div>
           </FormSection>
 
-          <FormSection title="Mode & Round" icon={<Video className="h-3.5 w-3.5" />}>
+          <FormSection title="Mode & Round" icon={<Video className="h-4 w-4" />}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">Mode <span className="text-red-500">*</span></label>
-                <select
-                  value={form.mode}
-                  onChange={(e) => setForm(f => ({ ...f, mode: e.target.value as InterviewMode }))}
-                  className="w-full border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 appearance-none"
-                  required
-                >
+                <select value={form.mode} onChange={(e) => setForm(f => ({ ...f, mode: e.target.value as InterviewMode }))}
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400" required>
                   <option value="ONLINE">Online</option>
                   <option value="OFFLINE">Offline</option>
                   <option value="PHONE">Phone</option>
@@ -201,12 +162,8 @@ export default function AdminInterviewForm() {
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">Round <span className="text-red-500">*</span></label>
-                <select
-                  value={form.round}
-                  onChange={(e) => setForm(f => ({ ...f, round: e.target.value as InterviewRound }))}
-                  className="w-full border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 appearance-none"
-                  required
-                >
+                <select value={form.round} onChange={(e) => setForm(f => ({ ...f, round: e.target.value as InterviewRound }))}
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400" required>
                   <option value="TECHNICAL">Technical</option>
                   <option value="MANAGERIAL">Managerial</option>
                   <option value="HR">HR</option>
@@ -216,39 +173,28 @@ export default function AdminInterviewForm() {
             </div>
 
             {form.mode === 'ONLINE' && (
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 mt-4">
                 <label className="text-sm font-medium text-slate-700">Meeting Link <span className="text-red-500">*</span></label>
-                <input
-                  type="url"
-                  value={form.meetingLink || ''}
-                  onChange={(e) => setForm(f => ({ ...f, meetingLink: e.target.value }))}
-                  className="w-full border border-slate-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
-                  placeholder="https://meet.google.com/..."
-                  required
-                />
+                <input type="url" value={form.meetingLink || ''} onChange={(e) => setForm(f => ({ ...f, meetingLink: e.target.value }))}
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                  placeholder="https://meet.google.com/..." required />
               </div>
             )}
 
             {form.mode === 'OFFLINE' && (
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 mt-4">
                 <label className="text-sm font-medium text-slate-700">Location <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={form.location || ''}
-                  onChange={(e) => setForm(f => ({ ...f, location: e.target.value }))}
-                  className="w-full border border-slate-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
-                  placeholder="Office address, room number..."
-                  required
-                />
+                <input type="text" value={form.location || ''} onChange={(e) => setForm(f => ({ ...f, location: e.target.value }))}
+                  className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                  placeholder="Office address, room number..." required />
               </div>
             )}
           </FormSection>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-3">
             <Button variant="secondary" type="button" onClick={() => navigate('/admin/interviews')}>Cancel</Button>
             <Button type="submit" loading={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" />
-              {isEdit ? 'Update Interview' : 'Schedule Interview'}
+              <Save className="h-4 w-4" /> {isEdit ? 'Update Interview' : 'Schedule Interview'}
             </Button>
           </div>
         </div>

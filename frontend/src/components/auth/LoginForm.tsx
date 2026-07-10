@@ -33,7 +33,7 @@ export function LoginForm() {
       }
       login(token, role as 'ADMIN' | 'CANDIDATE');
       toast('Welcome back!', 'success');
-      navigate('/dashboard');
+      navigate(role === 'ADMIN' ? '/admin/dashboard' : '/dashboard');
     },
     onError: () => {
       toast('Login failed. Please try again.', 'error');
