@@ -5,6 +5,7 @@ import com.jobtrack.entity.JobApplication;
 import com.jobtrack.entity.JobStatus;
 import com.jobtrack.service.JobService;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class JobController {
 
     // Add Job
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public String addJob(@RequestBody JobRequest request) {
         return jobService.addJob(request);
     }
@@ -60,6 +62,7 @@ public class JobController {
 
     // Update Job
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String updateJob(@PathVariable Long id,
                             @RequestBody JobRequest request) {
         return jobService.updateJob(id, request);
@@ -67,6 +70,7 @@ public class JobController {
 
     // Delete Job
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String deleteJob(@PathVariable Long id) {
         return jobService.deleteJob(id);
     }

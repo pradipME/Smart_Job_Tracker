@@ -1,7 +1,12 @@
 package com.jobtrack.service;
 
 import com.jobtrack.dto.LoginRequest;
+import com.jobtrack.dto.LoginResponse;
 import com.jobtrack.dto.RegisterRequest;
+import com.jobtrack.dto.LoginRequest;
+import com.jobtrack.dto.LoginResponse;
+import com.jobtrack.dto.RegisterRequest;
+import com.jobtrack.entity.Role;
 import com.jobtrack.entity.User;
 import com.jobtrack.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,27 +39,29 @@ public class AuthService {
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.CANDIDATE);
 
         userRepository.save(user);
 
         return "User Registered Successfully";
     }
 
-    public String login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request) {
 
         Optional<User> optionalUser =
                 userRepository.findByEmail(request.getEmail());
 
         if (optionalUser.isEmpty()) {
-            return "Invalid Email";
+            return new LoginResponse("Invalid Email", null, null);
         }
 
         User user = optionalUser.get();
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            return "Invalid Password";
+            return new LoginResponse("Invalid Password", null, null);
         }
 
-        return jwtService.generateToken(user.getEmail());
+        String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+        return new LoginResponse(token, user.getRole().name(), user.getFullName());
     }
 }

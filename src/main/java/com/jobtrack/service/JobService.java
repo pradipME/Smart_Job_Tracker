@@ -2,14 +2,14 @@ package com.jobtrack.service;
 
 import com.jobtrack.dto.DashboardResponse;
 import com.jobtrack.dto.JobRequest;
-import com.jobtrack.entity.JobApplication;
-import com.jobtrack.entity.JobStatus;
-import com.jobtrack.entity.User;
+import com.jobtrack.entity.*;
+import com.jobtrack.repository.ApplicationRepository;
 import com.jobtrack.repository.JobApplicationRepository;
 import com.jobtrack.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -19,11 +19,14 @@ import java.util.List;
 public class JobService {
 
     private final JobApplicationRepository jobRepository;
+    private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
 
     public JobService(JobApplicationRepository jobRepository,
+                      ApplicationRepository applicationRepository,
                       UserRepository userRepository) {
         this.jobRepository = jobRepository;
+        this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
     }
 
@@ -69,12 +72,10 @@ public class JobService {
 
     // Pagination
     public Page<JobApplication> getJobs(int page, int size) {
-
         User user = getLoggedInUser();
-
-        Pageable pageable = PageRequest.of(page, size);
-
-        return jobRepository.findByUser(user, pageable);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("appliedAt").descending());
+        return applicationRepository.findByCandidateIdAndDeletedFalse(user.getId(), pageable)
+                .map(this::toJobApplication);
     }
 
     // Search
@@ -95,16 +96,28 @@ public class JobService {
 
     // Dashboard
     public DashboardResponse getDashboard() {
-
         User user = getLoggedInUser();
 
-        return new DashboardResponse(
-                jobRepository.countByUser(user),
-                jobRepository.countByUserAndStatus(user, JobStatus.APPLIED),
-                jobRepository.countByUserAndStatus(user, JobStatus.INTERVIEW),
-                jobRepository.countByUserAndStatus(user, JobStatus.OFFER),
-                jobRepository.countByUserAndStatus(user, JobStatus.REJECTED)
-        );
+        if (user.getRole() == Role.ADMIN) {
+            long total = applicationRepository.countByDeletedFalse();
+            long applied = applicationRepository.countByDeletedFalseAndStatus(ApplicationStatus.APPLIED);
+            long interview = applicationRepository.countByDeletedFalseAndStatus(ApplicationStatus.INTERVIEW_SCHEDULED)
+                    + applicationRepository.countByDeletedFalseAndStatus(ApplicationStatus.HR_ROUND);
+            long offer = applicationRepository.countByDeletedFalseAndStatus(ApplicationStatus.SELECTED);
+            long rejected = applicationRepository.countByDeletedFalseAndStatus(ApplicationStatus.REJECTED);
+            return new DashboardResponse(total, applied, interview, offer, rejected);
+        }
+
+        List<Application> apps = applicationRepository.findByCandidateIdAndDeletedFalse(user.getId());
+        long total = apps.size();
+        long applied = apps.stream().filter(a -> a.getStatus() == ApplicationStatus.APPLIED).count();
+        long interview = apps.stream().filter(a ->
+                a.getStatus() == ApplicationStatus.INTERVIEW_SCHEDULED ||
+                a.getStatus() == ApplicationStatus.HR_ROUND
+        ).count();
+        long offer = apps.stream().filter(a -> a.getStatus() == ApplicationStatus.SELECTED).count();
+        long rejected = apps.stream().filter(a -> a.getStatus() == ApplicationStatus.REJECTED).count();
+        return new DashboardResponse(total, applied, interview, offer, rejected);
     }
 
     // Get By Id
@@ -158,5 +171,30 @@ public class JobService {
         jobRepository.delete(job);
 
         return "Job Deleted Successfully";
+    }
+
+    private JobApplication toJobApplication(Application app) {
+        JobApplication job = new JobApplication();
+        job.setId(app.getId());
+        job.setCompany(app.getJob().getCompany().getName());
+        job.setJobTitle(app.getJob().getTitle());
+        job.setLocation(app.getJob().getLocation());
+        job.setStatus(mapStatus(app.getStatus()));
+        job.setAppliedDate(app.getAppliedAt().toLocalDate());
+        job.setUser(app.getCandidate());
+        return job;
+    }
+
+    private JobStatus mapStatus(ApplicationStatus status) {
+        return switch (status) {
+            case APPLIED -> JobStatus.APPLIED;
+            case UNDER_REVIEW -> JobStatus.APPLIED;
+            case ASSESSMENT_ASSIGNED -> JobStatus.INTERVIEW;
+            case ASSESSMENT_COMPLETED -> JobStatus.INTERVIEW;
+            case INTERVIEW_SCHEDULED -> JobStatus.INTERVIEW;
+            case HR_ROUND -> JobStatus.INTERVIEW;
+            case SELECTED -> JobStatus.OFFER;
+            case REJECTED, WITHDRAWN -> JobStatus.REJECTED;
+        };
     }
 }
