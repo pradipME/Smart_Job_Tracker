@@ -30,32 +30,22 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
-
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
                 .authorizeHttpRequests(auth -> auth
-
-                        // Auth APIs
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        // Swagger
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
-
                         .anyRequest().authenticated()
                 )
-
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 )
-
                 .formLogin(form -> form.disable())
-
                 .httpBasic(httpBasic -> httpBasic.disable());
 
         return http.build();
@@ -66,7 +56,10 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:5173",
+                "https://*.netlify.app"
+        ));
 
         configuration.setAllowedMethods(List.of(
                 "GET",
