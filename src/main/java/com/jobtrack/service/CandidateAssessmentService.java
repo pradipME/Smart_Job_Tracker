@@ -159,7 +159,7 @@ public class CandidateAssessmentService {
         aa.setScore(totalScore);
         double percentage = totalMarks > 0 ? (double) totalScore / totalMarks * 100 : 0;
         aa.setPercentage(percentage);
-        aa.setPassed(percentage >= aa.getAssessment().getPassingMarks());
+        aa.setPassed(totalScore >= aa.getAssessment().getPassingMarks());
         appAssessmentRepository.save(aa);
 
         SubmitResponse response = new SubmitResponse();
@@ -167,7 +167,7 @@ public class CandidateAssessmentService {
         response.setScore(totalScore);
         response.setTotalMarks(totalMarks);
         response.setPercentage(percentage);
-        response.setPassed(percentage >= aa.getAssessment().getPassingMarks());
+        response.setPassed(totalScore >= aa.getAssessment().getPassingMarks());
         response.setCorrectCount(correctCount);
         response.setTotalQuestions(questions.size());
         response.setSubmittedAt(LocalDateTime.now());
@@ -219,7 +219,7 @@ public class CandidateAssessmentService {
         response.setScore(aa.getScore() != null ? aa.getScore() : totalScore);
         response.setTotalMarks(totalMarks);
         response.setPercentage(aa.getPercentage() != null ? aa.getPercentage() : percentage);
-        response.setPassed(aa.getPassed() != null ? aa.getPassed() : percentage >= aa.getAssessment().getPassingMarks());
+        response.setPassed(aa.getPassed() != null ? aa.getPassed() : totalScore >= aa.getAssessment().getPassingMarks());
         response.setCorrectCount(correctCount);
         response.setTotalQuestions(questions.size());
         response.setSubmittedAt(aa.getSubmittedAt());

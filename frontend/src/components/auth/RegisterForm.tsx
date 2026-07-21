@@ -28,17 +28,18 @@ export function RegisterForm() {
         email: data.email,
         password: data.password,
       }),
-    onSuccess: (res) => {
-      const msg = res.data;
-      if (msg.includes('already exists')) {
-        toast(msg, 'error');
-        return;
-      }
+    onSuccess: () => {
       toast('Account created! Please sign in.', 'success');
       navigate('/login');
     },
-    onError: () => {
-      toast('Registration failed. Please try again.', 'error');
+    onError: (error: any) => {
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message || error?.response?.data;
+      if (status === 409) {
+        toast(typeof message === 'string' ? message : 'Email already exists', 'error');
+      } else {
+        toast(typeof message === 'string' ? message : 'Registration failed. Please try again.', 'error');
+      }
     },
   });
 

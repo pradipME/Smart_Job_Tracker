@@ -235,19 +235,19 @@ public class AdminApplicationService {
         List<Object[]> byStatus = applicationRepository.countByStatusGroup();
         stats.setByStatus(byStatus.stream()
                 .map(row -> new AdminDashboardStatsResponse.StatusCount(
-                        ((ApplicationStatus) row[0]).name(), (long) row[1]))
+                        ((ApplicationStatus) row[0]).name(), ((Number) row[1]).longValue()))
                 .collect(Collectors.toList()));
 
         List<Object[]> byCompany = applicationRepository.countByCompanyGroup();
         stats.setByCompany(byCompany.stream()
                 .map(row -> new AdminDashboardStatsResponse.CompanyCount(
-                        (String) row[0], (long) row[1]))
+                        (String) row[0], ((Number) row[1]).longValue()))
                 .collect(Collectors.toList()));
 
         List<Object[]> monthly = applicationRepository.countMonthly();
         stats.setMonthly(monthly.stream()
                 .map(row -> new AdminDashboardStatsResponse.MonthlyCount(
-                        ((Number) row[0]).intValue(), ((Number) row[1]).intValue(), (long) row[2]))
+                        ((Number) row[0]).intValue(), ((Number) row[1]).intValue(), ((Number) row[2]).longValue()))
                 .collect(Collectors.toList()));
 
         return stats;

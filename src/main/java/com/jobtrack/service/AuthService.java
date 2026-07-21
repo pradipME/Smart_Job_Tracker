@@ -3,16 +3,13 @@ package com.jobtrack.service;
 import com.jobtrack.dto.LoginRequest;
 import com.jobtrack.dto.LoginResponse;
 import com.jobtrack.dto.RegisterRequest;
-import com.jobtrack.dto.LoginRequest;
-import com.jobtrack.dto.LoginResponse;
-import com.jobtrack.dto.RegisterRequest;
 import com.jobtrack.entity.Role;
 import com.jobtrack.entity.User;
 import com.jobtrack.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthService {
@@ -32,7 +29,8 @@ public class AuthService {
     public String register(RegisterRequest request) {
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return "Email already exists";
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Email already exists");
         }
 
         User user = new User();
@@ -48,17 +46,13 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
 
-        Optional<User> optionalUser =
-                userRepository.findByEmail(request.getEmail());
-
-        if (optionalUser.isEmpty()) {
-            return new LoginResponse("Invalid Email", null, null);
-        }
-
-        User user = optionalUser.get();
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "Invalid email or password"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            return new LoginResponse("Invalid Password", null, null);
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
         String token = jwtService.generateToken(user.getEmail(), user.getRole().name());

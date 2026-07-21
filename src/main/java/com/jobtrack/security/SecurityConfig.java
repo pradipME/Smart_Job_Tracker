@@ -2,6 +2,7 @@ package com.jobtrack.security;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -20,6 +21,9 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Value("${cors.allowed-origins:http://localhost:5173,https://jobtrack.netlify.app}")
+    private String allowedOrigins;
+
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -34,6 +38,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/health").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -56,22 +61,23 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(List.of(
-                "http://localhost:5173",
-                "https://*.netlify.app"
-        ));
+        List<String> origins = List.of(allowedOrigins.split(","));
+        configuration.setAllowedOriginPatterns(origins);
 
         configuration.setAllowedMethods(List.of(
                 "GET",
                 "POST",
                 "PUT",
                 "DELETE",
-                "OPTIONS"
+                "OPTIONS",
+                "PATCH"
         ));
 
         configuration.setAllowedHeaders(List.of("*"));
 
         configuration.setAllowCredentials(true);
+
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

@@ -27,7 +27,7 @@ export function LoginForm() {
     mutationFn: (data: LoginFormData) => authApi.login(data),
     onSuccess: (res) => {
       const { token, role } = res.data;
-      if (!token) {
+      if (!token || !role) {
         toast('Invalid email or password', 'error');
         return;
       }
@@ -35,8 +35,11 @@ export function LoginForm() {
       toast('Welcome back!', 'success');
       navigate(role === 'ADMIN' ? '/admin/dashboard' : '/dashboard');
     },
-    onError: () => {
-      toast('Login failed. Please try again.', 'error');
+    onError: (error: any) => {
+      const message = error?.response?.data?.message
+        || error?.response?.data
+        || 'Invalid email or password';
+      toast(typeof message === 'string' ? message : 'Login failed. Please try again.', 'error');
     },
   });
 

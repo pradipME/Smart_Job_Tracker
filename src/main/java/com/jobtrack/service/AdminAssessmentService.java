@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,17 +25,20 @@ public class AdminAssessmentService {
     private final ApplicationAssessmentRepository appAssessmentRepository;
     private final AnswerRepository answerRepository;
     private final JobListingRepository jobListingRepository;
+    private final UserRepository userRepository;
 
     public AdminAssessmentService(AssessmentRepository assessmentRepository,
                                   QuestionRepository questionRepository,
                                   ApplicationAssessmentRepository appAssessmentRepository,
                                   AnswerRepository answerRepository,
-                                  JobListingRepository jobListingRepository) {
+                                  JobListingRepository jobListingRepository,
+                                  UserRepository userRepository) {
         this.assessmentRepository = assessmentRepository;
         this.questionRepository = questionRepository;
         this.appAssessmentRepository = appAssessmentRepository;
         this.answerRepository = answerRepository;
         this.jobListingRepository = jobListingRepository;
+        this.userRepository = userRepository;
     }
 
     public Page<AssessmentResponse> getAssessments(String search, String status, int page, int size) {
@@ -194,10 +198,30 @@ public class AdminAssessmentService {
         Assessment a = assessmentRepository.findByIdAndDeletedFalse(assessmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assessment not found"));
 
-        return appAssessmentRepository.findByAssessmentId(assessmentId)
+        List<ApplicationAssessment> attempts = appAssessmentRepository.findByAssessmentId(assessmentId)
                 .stream()
                 .filter(aa -> aa.getStatus() == AttemptStatus.COMPLETED || aa.getStatus() == AttemptStatus.TIMEOUT)
-                .map(AssessmentResultResponse::fromEntity)
+                .toList();
+
+        List<Long> candidateIds = attempts.stream()
+                .map(ApplicationAssessment::getCandidateId)
+                .distinct()
+                .toList();
+
+        Map<Long, User> candidateMap = userRepository.findAllById(candidateIds)
+                .stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        return attempts.stream()
+                .map(aa -> {
+                    AssessmentResultResponse res = AssessmentResultResponse.fromEntity(aa);
+                    User candidate = candidateMap.get(aa.getCandidateId());
+                    if (candidate != null) {
+                        res.setCandidateName(candidate.getFullName());
+                        res.setCandidateEmail(candidate.getEmail());
+                    }
+                    return res;
+                })
                 .sorted(Comparator.comparingInt(AssessmentResultResponse::getScore).reversed())
                 .collect(Collectors.toList());
     }

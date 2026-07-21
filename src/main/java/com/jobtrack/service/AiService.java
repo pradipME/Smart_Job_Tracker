@@ -36,7 +36,14 @@ public class AiService {
         }
     }
 
+    private void ensureAiConfigured() {
+        if (!openAIConfig.isConfigured()) {
+            throw new RuntimeException("AI service is not configured. Set OPENAI_API_KEY environment variable.");
+        }
+    }
+
     private String callOpenAI(String systemPrompt, String userMessage) {
+        ensureAiConfigured();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(openAIConfig.getApiKey());

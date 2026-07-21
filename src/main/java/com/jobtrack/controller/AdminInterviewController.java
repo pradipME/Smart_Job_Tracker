@@ -55,8 +55,13 @@ public class AdminInterviewController {
     public ResponseEntity<InterviewResponse> updateStatus(
             @PathVariable Long id,
             @RequestBody Map<String, Object> body) {
-        String status = (String) body.get("status");
-        String feedback = (String) body.get("feedback");
+        Object statusObj = body.get("status");
+        if (statusObj == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "Status is required");
+        }
+        String status = statusObj.toString();
+        String feedback = body.get("feedback") != null ? body.get("feedback").toString() : null;
         Integer rating = body.get("rating") != null ? ((Number) body.get("rating")).intValue() : null;
         return ResponseEntity.ok(adminInterviewService.updateStatus(id, status, feedback, rating));
     }
